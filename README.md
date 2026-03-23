@@ -52,3 +52,51 @@ El switch resolvió todos estos problemas y por eso lo reemplazó completamente.
 - **Broadcast:** Envío de datos a todos los dispositivos de una red. El hub siempre opera en broadcast; el switch lo hace solo cuando no conoce la MAC de destino.
  
 ---
+## 3. Conexión directa con desarrollo (CLAVE)
+ 
+### ¿Qué rol cumple el router cuando haces una petición a una API?
+ 
+Cuando tu frontend ejecuta:
+ 
+```javascript
+fetch("https://api.miapp.com/users")
+```
+ 
+Ocurre lo siguiente:
+ 
+1. El **DNS** resuelve `api.miapp.com` a una dirección IP (ej: `104.26.10.50`).
+2. Tu computador envía el paquete al **router de tu red local** (tu gateway).
+3. Ese router examina la IP de destino y lo reenvía al **router de tu ISP**.
+4. El paquete pasa por **múltiples routers** en Internet (cada uno decidiendo el mejor camino).
+5. Finalmente llega al **router del data center** donde está alojado tu backend.
+6. El router del data center entrega el paquete al servidor correcto.
+ 
+**Sin routers, tu `fetch()` nunca saldría de tu red local.**
+ 
+### ¿Por qué un switch es importante en un backend o data center?
+ 
+En un data center, el switch es el que conecta internamente:
+ 
+- Tu **servidor de aplicación** (donde corre tu backend en Java/Node/Python).
+- Tu **base de datos** (PostgreSQL, MySQL, MongoDB).
+- Tu **servidor de caché** (Redis, Memcached).
+- Tu **load balancer**.
+- Tu **servidor de archivos** o storage.
+ 
+Todos estos servicios se comunican entre sí a través de switches. Si un switch falla o se satura, la comunicación interna se corta, aunque cada servidor individual esté funcionando perfectamente.
+ 
+### ¿Qué problemas de red podrían afectar tu app aunque tu código esté correcto?
+ 
+| Problema de red | Efecto en tu aplicación |
+|----------------|------------------------|
+| **Alta latencia** entre servicios | Timeouts en requests a la API o a la base de datos |
+| **Pérdida de paquetes** | Respuestas incompletas, retransmisiones TCP, lentitud |
+| **DNS mal configurado** | El dominio `api.miapp.com` no resuelve a ninguna IP |
+| **Tabla de rutas incorrecta** en el router | Los paquetes no llegan al servidor destino |
+| **Switch saturado** en el data center | Cuello de botella en la comunicación entre backend y DB |
+| **Firewall bloqueando puertos** | La conexión se rechaza aunque el servidor esté escuchando |
+ 
+**Como developer, tu código puede estar 100% correcto y aún así la aplicación falla si la red tiene problemas.**
+ 
+ 
+---
