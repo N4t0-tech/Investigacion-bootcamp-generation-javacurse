@@ -98,5 +98,46 @@ Todos estos servicios se comunican entre sí a través de switches. Si un switch
  
 **Como developer, tu código puede estar 100% correcto y aún así la aplicación falla si la red tiene problemas.**
  
- 
+
 ---
+
+ 
+## 4. Caso práctico real
+ 
+### Escenario
+ 
+> "Tu aplicación está en producción, pero los usuarios no pueden acceder."
+ 
+### ¿Podría ser problema de router? ¿Por qué?
+ 
+**Sí.** Si el router del data center tiene una ruta mal configurada, los paquetes de los usuarios nunca llegan al servidor. También puede ser un problema del ISP (un fallo en el enrutamiento BGP puede dejar tu servidor inaccesible desde ciertas regiones).
+ 
+**Cómo diagnosticarlo:**
+```bash
+traceroute api.miapp.com
+```
+Si el traceroute muestra que los paquetes se pierden en un salto intermedio (timeouts con `* * *`), el problema es de enrutamiento.
+ 
+### ¿Podría ser problema de switch? ¿Por qué?
+ 
+**Sí.** Si el switch al que está conectado tu servidor falla, el servidor queda **aislado de la red interna** del data center. Está encendido y ejecutando código, pero nadie puede comunicarse con él.
+ 
+**Cómo diagnosticarlo:**
+```bash
+# Desde otro servidor en la misma red del data center:
+ping 192.168.1.50   # IP interna de tu servidor
+```
+Si no responde al ping desde la misma red local, probablemente es un problema del switch o del cable de red.
+ 
+### ¿Cómo distinguir si es problema de red o de código?
+ 
+| Paso | Comando | Si funciona... | Si falla... |
+|------|---------|---------------|-------------|
+| 1. Verificar conectividad básica | `ping api.miapp.com` | La red funciona, seguir al paso 2 | Problema de **red/DNS** |
+| 2. Verificar ruta de red | `traceroute api.miapp.com` | Los paquetes llegan, seguir al paso 3 | Problema de **enrutamiento** |
+| 3. Verificar que el servicio responde | `curl -I https://api.miapp.com` | El servidor web responde, seguir al paso 4 | Problema de **servidor/firewall** |
+| 4. Verificar respuesta de la app | `curl https://api.miapp.com/health` | Todo OK, revisar frontend | Problema de **código/aplicación** |
+| 5. Revisar logs | `docker logs mi-app` | Buscar errores específicos | El error está en los logs |
+ 
+**Regla general:** Si `ping` y `curl` funcionan pero la app no, es código. Si `ping` falla, es red.
+ 
