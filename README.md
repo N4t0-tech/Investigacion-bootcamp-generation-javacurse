@@ -2,7 +2,7 @@
  
 > **Curso:** Full Stack Java Developer — Generation Chile  
 > **Actividad:** Fundamentos de Redes  
-> **Autor de la actividad:** Renato Campos
+> **Nombre:** Renato Campos
  
 ---
 
