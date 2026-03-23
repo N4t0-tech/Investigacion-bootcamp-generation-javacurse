@@ -141,3 +141,68 @@ Si no responde al ping desde la misma red local, probablemente es un problema de
  
 **Regla general:** Si `ping` y `curl` funcionan pero la app no, es código. Si `ping` falla, es red.
  
+ ---
+
+## BONUS
+ 
+### ¿Dónde entra un Load Balancer en todo esto?
+ 
+El **load balancer** se ubica entre el router de entrada y los servidores de aplicación. Su función es **distribuir las peticiones entrantes** entre múltiples instancias de tu backend para que ningún servidor se sature.
+ 
+```
+Usuario → Router → Load Balancer → Servidor 1
+                                  → Servidor 2
+                                  → Servidor 3
+```
+ 
+**Analogía:** Es como el **hostess de un restaurante** que reparte a los clientes entre los meseros disponibles para que ninguno quede sobrecargado.
+ 
+Ejemplos reales: **Nginx** (como reverse proxy), **HAProxy**, **AWS ALB/ELB**, **Azure Load Balancer**.
+ 
+### ¿Qué relación tiene todo esto con Cloud (AWS, Azure, GCP)?
+ 
+En la nube, **todos estos dispositivos existen pero virtualizados**:
+ 
+| Dispositivo físico | Equivalente en Cloud |
+|-------------------|---------------------|
+| Router | **VPC Router / Internet Gateway** — enruta tráfico entre subnets y hacia Internet |
+| Switch | **Virtual Switch / Security Groups** — controla la comunicación entre instancias dentro de una VPC |
+| Hub | No existe equivalente (obsoleto) |
+| Load Balancer | **AWS ALB/NLB, Azure Load Balancer, GCP Cloud Load Balancing** — servicios gestionados |
+| Firewall | **Security Groups / NACLs** — reglas que filtran tráfico entrante y saliente |
+ 
+Entender cómo funciona la red física te permite **configurar correctamente la red virtual** en la nube: VPCs, subnets, tablas de ruteo, security groups, etc.
+ 
+---
+ 
+## Resumen visual: El viaje de un `fetch()`
+ 
+```
+[Tu navegador]
+      │
+      ▼
+[Router de tu red local]  ← Decide cómo sacar el paquete de tu red
+      │
+      ▼
+[Routers de Internet]     ← Múltiples saltos hasta llegar al destino
+      │
+      ▼
+[Router del Data Center]  ← Recibe el paquete y lo dirige internamente
+      │
+      ▼
+[Load Balancer]           ← Distribuye entre varios servidores
+      │
+      ▼
+[Switch del Data Center]  ← Dirige al servidor correcto por MAC
+      │
+      ▼
+[Tu servidor backend]     ← Procesa el request y devuelve respuesta
+      │
+      ▼
+[Base de datos / Redis]   ← Conectados al mismo switch internamente
+```
+ 
+---
+ 
+> *"Un developer que entiende redes no solo programa… entiende por qué las cosas fallan, escala mejor sus soluciones y se vuelve mucho más profesional."*
+ 
